@@ -36,11 +36,40 @@ def test_add_new_user(setup_database, connection):
     user = cursor.fetchone()
     assert user, "Пользователь должен быть добавлен в базу данных."
 
-# Возможные варианты тестов:
-"""
-Тест добавления пользователя с существующим логином.
-Тест успешной аутентификации пользователя.
-Тест аутентификации несуществующего пользователя.
-Тест аутентификации пользователя с неправильным паролем.
-Тест отображения списка пользователей.
-"""
+def test_add_user_with_existing_username(setup_database, connection):
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = add_user('testuser', 'anotheruser@example.com', 'password456')
+    assert result == False
+    cursor = connection.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users WHERE username='testuser';")
+    count = cursor.fetchone()[0]
+    assert count == 1
+
+def test_successful_authentication(setup_database, connection):
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = authenticate_user('testuser', 'password123')
+    assert result == True
+
+def test_successful_authentication(setup_database, connection):
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = authenticate_user('testuser', 'password123')
+    assert result == True
+
+def test_authentication_non_existing_user(setup_database, connection):
+    result = authenticate_user('nonexistentuser', 'somepassword')
+    assert result == False
+
+def test_authentication_wrong_password(setup_database, connection):
+    add_user('testuser', 'testuser@example.com', 'password123')
+    result = authenticate_user('testuser', 'wrongpassword')
+    assert result == False
+
+def test_display_users(setup_database, connection):
+    add_user('testuser1', 'testuser1@example.com', 'password123')
+    add_user('testuser2', 'testuser2@example.com', 'password456')
+    
+    users = display_users()
+    assert len(users) == 2
+    assert any(user['username'] == 'testuser1' for user in users)
+    assert any(user['username'] == 'testuser2' for user in users)
+
